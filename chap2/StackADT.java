@@ -14,6 +14,4 @@ public interface StackADT<T> {
     // Return whether the stack has any elements in it
     boolean isEmpty();
 
-    // Resize the stack when it is at capacity
-    void resize();
 }

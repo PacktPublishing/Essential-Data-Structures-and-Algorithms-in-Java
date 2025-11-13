@@ -3,13 +3,13 @@ import java.util.Arrays;
 /**
  * A generic stack implemented with a dynamic array buffer.
  */
-public class DynamicStack<T> implements StackADT<T> {
+public class DynamicArrayStack<T> implements StackADT<T> {
 
     private Object[] data;     
     private int size;
 
     // Initial user-defined construction
-    public DynamicStack(int capacity) {
+    public DynamicArrayStack(int capacity) {
         if (capacity <= 0) {
             throw new IllegalArgumentException("Stack capacity must be > 0");
         }

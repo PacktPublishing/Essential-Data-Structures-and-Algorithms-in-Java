@@ -1,7 +1,7 @@
 /**
  * A generic FIFO queue backed by a resizable circular array.
  */
-public class DynamicArrayQueue<E> {
+public class DynamicArrayQueue<T> implements QueueADT<T> {
 
     private Object[] data;  
     private int head;       
@@ -16,19 +16,19 @@ public class DynamicArrayQueue<E> {
     }
 
     // Add an element to the back of the queue
-    public void enqueue(E e) {
+    public void enqueue(T item) {
         if (size == data.length)
             resize();
-        data[tail] = e;
+        data[tail] = item;
         tail = (tail + 1) % data.length;
         size++;
     }
 
     // Remove an element at the front of the queue
-    public E dequeue() {
+    public T dequeue() {
         if (size == 0) throw new IllegalStateException("Queue is empty");
 
-        E result = (E) data[head];
+        T result = (T) data[head];
         data[head] = null;            
         head = (head + 1) % data.length;
         size--;
@@ -36,16 +36,16 @@ public class DynamicArrayQueue<E> {
     }
 
     // Return an element at the front without removing it
-    public E peek() {
+    public T peek() {
         if (size == 0) throw new IllegalStateException("Queue is empty");
-        return (E) data[head];
+        return (T) data[head];
     }
-
-    // Return true if the queue contains no elements
-    public boolean isEmpty() { return size == 0; }
 
     // Return the number of elements in the queue
     public int size() { return size; }
+
+    // Return true if the queue contains no elements
+    public boolean isEmpty() { return size == 0; }
 
     // Resize the array when it is at capacity
     private void resize() {

@@ -31,6 +31,7 @@ public class LinkedListStack<T> implements StackADT<T> {
          return isEmpty() ? null : top.data;
     }
 
+    // Return the size of the stack
     @Override
     public int size() {
         return size;

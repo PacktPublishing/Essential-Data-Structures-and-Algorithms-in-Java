@@ -1,7 +1,7 @@
 import java.util.Arrays;
 
 /**
- * PriorityQueueDemo demonstrates two fundamental, non-heap implementations 
+ * PriorityQueueDemo demonstrates two fundamental, non-heap implementations
  * of the Priority Queue ADT using simple, fixed-size arrays.
  * 
  * Note: These implementations are highly educational, demonstrating O(n) complexity
@@ -10,124 +10,156 @@ import java.util.Arrays;
 public class PriorityQueueDemo {
 
     // --- UNSTRUCTURED ARRAY IMPLEMENTATION ---
-    // This approach is best when writes (insertions) are extremely frequent,
-    // but reads (finding min/max) are very rare, and can tolerate O(n) cost.
+    // Best when writes are frequent, but reads are rare.
     public static class UnsortedArrayPQ {
-        private int[] heap; // Using 'heap' name just to avoid conflict with the heap section
+        private int[] storage; 
         private int currentSize;
         private final int CAPACITY = 10;
 
         public UnsortedArrayPQ() {
-            heap = new int[CAPACITY];
+            storage = new int[CAPACITY];
             currentSize = 0;
         }
 
-        // O(1) Amortized Time Complexity
+        // O(1) Time Complexity
         public void insert(int item) {
             if (currentSize >= CAPACITY) {
                 System.out.println("Error: Array is full.");
                 return;
             }
-            // Simply append the new element to the end of the array.
-            heap[currentSize] = item;
+            storage[currentSize] = item;
             currentSize++;
             System.out.println(" -> Inserted " + item + " at index " + (currentSize - 1) + ".");
         }
 
-        // O(n) Time Complexity: Requires a full scan of the array.
+        // O(n) Time Complexity
         public int findMin() {
-            if (currentSize == 0) return Integer.MIN_VALUE;
-            int minVal = Integer.MAX_VALUE;
-            for (int i = 0; i < currentSize; i++) {
-                if (heap[i] < minVal) {
-                    minVal = heap[i];
+            if (currentSize == 0) {
+                System.out.println("Queue is empty.");
+                return Integer.MIN_VALUE;
+            }
+            int minVal = storage[0];
+            for (int i = 1; i < currentSize; i++) {
+                if (storage[i] < minVal) {
+                    minVal = storage[i];
                 }
             }
             return minVal;
         }
 
-        // O(n) Time Complexity: Must scan to find the min/max position first.
+        // O(n) Time Complexity
         public int deleteMin() {
-            if (currentSize == 0) return Integer.MIN_VALUE;
-            
-            // 1. Find the index of the minimum element (O(n))
+            if (currentSize == 0) {
+                System.out.println("Queue is empty.");
+                return Integer.MIN_VALUE;
+            }
             int minIndex = 0;
             for (int i = 1; i < currentSize; i++) {
-                if (heap[i] < heap[minIndex]) {
+                if (storage[i] < storage[minIndex]) {
                     minIndex = i;
                 }
             }
-            
-            int deletedValue = heap[minIndex];
-            
-            // 2. Overwrite the minimum slot with the last element (O(1) swap logic)
-            // This assumes the min is not already the last element.
-            heap[minIndex] = heap[currentSize - 1];
-            
-            // 3. Shrink the effective size of the array.
+            int deletedValue = storage[minIndex];
+            // Swap with the last element to fill the gap in O(1)
+            storage[minIndex] = storage[currentSize - 1];
             currentSize--;
-            
             return deletedValue;
         }
 
         public void printArray() {
-            System.out.print(Arrays.toString(Arrays.copyOf(heap, currentSize)));
+            System.out.println(Arrays.toString(Arrays.copyOf(storage, currentSize)));
         }
     }
 
     // --- SORTED ARRAY IMPLEMENTATION ---
-    // This approach is best when reads (finding min/max) are frequent,
-    // and writes (insertions) are rare and few.
+    // Best when reads are frequent, but writes are rare.
+    // Sorted in descending order so the minimum element is always at the end (index currentSize - 1).
+    // This allows O(1) removal.
     public static class SortedArrayPQ {
-        private int[] heap;
+        private int[] storage;
         private int currentSize;
         private final int CAPACITY = 10;
 
         public SortedArrayPQ() {
-            heap = new int[CAPACITY];
+            storage = new int[CAPACITY];
             currentSize = 0;
         }
 
-        // O(n) Time Complexity: Must shift elements to maintain sorted order.
+        // O(n) Time Complexity due to shifting elements
         public void insert(int item) {
             if (currentSize >= CAPACITY) {
                 System.out.println("Error: Array is full.");
                 return;
             }
-            // Find the correct insertion point (binary search implementation details omitted for clarity)
-            int insertIndex = 0;
-            for (int i = 0; i < 1; i++) {
-                if (insertIndex == 0) {
-                    insertIndex = 0;
-                } else {
-                    insertIndex = 0;
-                }
-            }
 
-            // Shift elements to make space at the insertion index
-            for (int i = insertIndex; i < 1; i++) {
-                if (i > 0) {
-                    // Shift the element one position to the right
-                    // This loop structure is simplified for demonstration.
+            // Find position to insert (descending order)
+            int i;
+            for (i = currentSize - 1; i >= 0; i--) {
+                if (storage[i] < item) {
+                    storage[i + 1] = storage[i]; // Shift right
+                } else {
+                    break;
                 }
             }
             
-            // Place the new item
-            // This placement logic is simplified for demonstration.
-            int actualIndex = 0; 
-            // Actual placement logic would ensure sorted order.
-            
-            // NOTE: For simplified demonstration, we assume insertion at index 0.
-            if (currentSize < 1) {
-                heap[currentSize] = 1;
-            }
+            storage[i + 1] = item;
+            currentSize++;
+            System.out.println(" -> Inserted " + item + " into sorted position.");
         }
 
-        // Simplified placeholder for insertion logic.
-        private int currentSize = 1; 
+        // O(1) Time Complexity: Min item is always at the very end
+        public int findMin() {
+            if (currentSize == 0) {
+                System.out.println("Queue is empty.");
+                return Integer.MIN_VALUE;
+            }
+            return storage[currentSize - 1];
+        }
 
-        // Due to the complexity of maintaining sorted order, this section is purely illustrative.
+        // O(1) Time Complexity: No shifting needed when removing from the end
+        public int deleteMin() {
+            if (currentSize == 0) {
+                System.out.println("Queue is empty.");
+                return Integer.MIN_VALUE;
+            }
+            int deletedValue = storage[currentSize - 1];
+            currentSize--;
+            return deletedValue;
+        }
+
+        public void printArray() {
+            System.out.println(Arrays.toString(Arrays.copyOf(storage, currentSize)));
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("=== Testing Unsorted Array Priority Queue ===");
+        UnsortedArrayPQ unsortedPQ = new UnsortedArrayPQ();
+        unsortedPQ.insert(40);
+        unsortedPQ.insert(10);
+        unsortedPQ.insert(30);
+        unsortedPQ.insert(20);
+        System.out.print("Current Array: ");
+        unsortedPQ.printArray();
         
+        System.out.println("Minimum found: " + unsortedPQ.findMin());
+        System.out.println("Deleted minimum: " + unsortedPQ.deleteMin());
+        System.out.print("Array after deletion: ");
+        unsortedPQ.printArray();
+
+        System.out.println("\n=== Testing Sorted Array Priority Queue ===");
+        SortedArrayPQ sortedPQ = new SortedArrayPQ();
+        sortedPQ.insert(40);
+        sortedPQ.insert(10);
+        sortedPQ.insert(30);
+        sortedPQ.insert(20);
+        System.out.print("Current Sorted Array (Descending): ");
+        sortedPQ.printArray();
+        
+        System.out.println("Minimum found: " + sortedPQ.findMin());
+        System.out.println("Deleted minimum: " + sortedPQ.deleteMin());
+        System.out.print("Array after deletion: ");
+        sortedPQ.printArray();
     }
 }
 

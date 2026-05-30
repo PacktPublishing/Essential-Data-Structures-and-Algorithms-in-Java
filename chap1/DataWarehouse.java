@@ -4,18 +4,19 @@ import java.util.Map;
 public class DataWarehouse {
     // Use a HashMap to store data in columns
     private Map<Integer, Object[]> dataMap; 
-    public static final int DATA_LENGTH = 3;
+    public static final int DATA_LENGTH = 4;
 
     public DataWarehouse() {
         this.dataMap = new HashMap<>();
     }
 
     // Add data to the warehouse
-    public void addData(int id, String name, double grade) {
+    public void addData(int id, String name, int age, String city) {
         Object[] values = new Object[DATA_LENGTH];
         values[0] = id;
         values[1] = name;
-        values[2] = grade;
+        values[2] = age;
+        values[3] = city;
         dataMap.put(id, values);
     }
 
@@ -26,10 +27,10 @@ public class DataWarehouse {
 
     // Perform a query on the data
     public void query(String condition) {
-        if (condition.equals("grade >= 60.0")) {
+        if (condition.equals("age > 30")) {
             for (Object[] values : dataMap.values()) {
-                double grade = (double) values[2];
-                if (grade >= 60.0) {
+                int age = (int) values[2];
+                if (age > 30) {
                     System.out.println(values[0] + ", " + values[1] + ", " + values[2]);
                 }
             }
@@ -41,12 +42,12 @@ public class DataWarehouse {
     public static void main(String[] args) {
         DataWarehouse dw = new DataWarehouse();
         // Hydrate data warehouse
-        dw.addData(1, "Bob", 61);
-        dw.addData(2, "Alice", 99);
-        dw.addData(3, "John", 59.99);
-        dw.addData(4, "Kevin", 88);
-        dw.addData(5, "Jane", 30.20);
+        dw.addData(1, "Alice", 30, "NYC");
+        dw.addData(2, "Bob", 25, "LA");
+        dw.addData(3, "Carol", 35, "SEA");
         // Run query
-        dw.query("grade >= 60.0");
+        dw.query("age > 30");
+        // Fetch data by id
+        System.out.println(dw.getData(1));
     }
 }

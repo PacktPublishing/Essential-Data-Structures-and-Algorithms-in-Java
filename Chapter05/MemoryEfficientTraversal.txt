@@ -1,0 +1,39 @@
+Techniques to reduce stack space
+
+
+1. Only push the branch you're deferring; walk the other in place.
+Instead of pushing both children, descend one branch in a loop and push only the side branches you still owe. For pre-order:
+
+TreeNode node = root;
+while (node != null || !stack.isEmpty()) {
+    while (node != null) {
+        visit(node);
+        if (node.right != null) stack.push(node.right);
+        node = node.left; 
+    }
+    // node is now null, meaning we reached the end of a left branch.
+    // If the stack isn't empty, pop the next deferred right branch.
+    if (!stack.isEmpty()) {
+        node = stack.pop();
+    }
+}
+
+On a left-skewed tree this pushes nothing — the stack stays O(1). The stack only ever holds pending right subtrees, so its depth is the number of "right turns" along the current path, not the full height.
+
+2. Recurse on the smaller child, iterate on the larger.
+The strongest general bound. At each node, descend the 
+larger subtree in the loop and push only the smaller subtree. Because the pushed subtree is always ≤ half the remaining nodes, the stack depth is bounded by O(log n)regardless of balance — this is the same idea that makes introsort/quicksort's recursion O(log n) worst case. This turns a degenerate O(n) into a guaranteed O(log n).
+
+3. Morris traversal — O(1) stack, no stack at all.
+Eliminate the explicit stack entirely by temporarily rewiring 
+threaded pointers: link each node's in-order predecessor's right pointer back to the node, follow it to "return" without a stack, then restore the pointer. Space drops to O(1) independent of tree shape.
+
+For each node with a left child:
+  find the rightmost node of its left subtree (the predecessor)
+  if predecessor.right == null: 
+        set it to current, go left      (thread it)
+  else:                          
+        restore to null, visit, go right (unthread)
+
+
+Trade-offs: it temporarily mutates the tree (not thread-safe, problematic if traversal is interrupted or the tree is shared/read-only), and the constant factor is higher because each edge is walked ~twice to find predecessors.

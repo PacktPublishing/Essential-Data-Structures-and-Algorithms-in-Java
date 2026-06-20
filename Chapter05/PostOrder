@@ -1,0 +1,34 @@
+import java.util.*;
+
+public class PostOrder {
+
+    public static String postOrder(TreeNode root) {
+        if (root == null) return "";          // empty tree -> empty string
+
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        Deque<Integer> output = new ArrayDeque<>();  // we'll push to the FRONT to reverse
+
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            TreeNode node = stack.pop();
+            // Record node value at the FRONT: this builds post-order in reverse.
+            // We are visiting in (node -> right -> left) order; reversing it
+            // gives (left -> right -> node), which is post-order.
+            output.addFirst(node.val);
+
+            // Push LEFT first so RIGHT is popped first (processed before left).
+            if (node.left != null)  stack.push(node.left);
+            if (node.right != null) stack.push(node.right);
+        }
+
+        // Join the reversed sequence with commas, no trailing comma.
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (int v : output) {
+            if (!first) sb.append(',');
+            sb.append(v);
+            first = false;
+        }
+        return sb.toString();
+    }
+}

@@ -18,8 +18,6 @@ public class KadanesAlgorithm {
         int currentMax = arr[0];
 
         for (int i = 1; i < arr.length; i++) {
-            int[] arr = arr; // Re-declaring arr for clarity in the loop scope if needed, but not necessary.
-
             // The maximum sum ending at index i is either the element itself,
             // or the element added to the maximum sum ending at index i-1.
             currentMax = Math.max(arr[i], currentMax + arr[i]);

@@ -7,8 +7,8 @@ public class ParkingTicketSystem {
     private final Map<String, LocalDateTime> tickets = new HashMap<>();
 
     public String enterGarage(String licensePlate) {
-        // Generate a unquie ticket key
-        String ticket = UUID.randomUUID().toString();  
+        // Generate a unique ticket key
+        String ticket = UUID.randomUUID().toString();
         // Log the vehicle entry time based on the ticket key
         tickets.put(ticket, LocalDateTime.now());
         System.out.printf("Ticket issued: %s for %s%n", ticket, licensePlate);
@@ -17,7 +17,7 @@ public class ParkingTicketSystem {
 
     public double exitGarage(String ticket) {
         // Constant time lookup
-        LocalDateTime entry = tickets.remove(ticket);   
+        LocalDateTime entry = tickets.remove(ticket);
         if (entry == null) throw new IllegalArgumentException("Invalid ticket");
         long seconds = Duration.between(entry, LocalDateTime.now()).toSeconds();
         double cost = calculateFee(seconds);
@@ -28,14 +28,14 @@ public class ParkingTicketSystem {
 
     private double calculateFee(long seconds) {
         // Charge $2 per hour
-        double ratePerHour = 2.0;               
+        double ratePerHour = 2.0;
         return (seconds / 3600.0) * ratePerHour;
     }
 
     public static void main(String[] args) throws InterruptedException {
-        Main s = new Main();
-        String ticket = s.enterGarage("Z‑888");
-        // Introduce an arbitrary 5 seconds of parking - simulating 5 minutes 
+        ParkingTicketSystem s = new ParkingTicketSystem();
+        String ticket = s.enterGarage("Z-888");
+        // Introduce a 5-second real-time delay to simulate a short parking duration
         Thread.sleep(5000);
         s.exitGarage(ticket);
     }

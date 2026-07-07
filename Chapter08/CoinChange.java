@@ -1,34 +1,29 @@
+import java.util.Arrays;
+
 public class CoinChange {
-    
-    public static int coinChange(int[] coins, int amount) {
-        // dp[i] represents minimum coins needed to make amount i
+    public int coinChange(int[] coins, int amount) {
+        // dp[a] = minimum coins to reach amount a
+        //     Sentinel value: amount+1 means "not yet reachable"
         int[] dp = new int[amount + 1];
-        Arrays.fill(dp, amount + 1); // Initialize with a value larger than any possible answer
-        dp[0] = 0; // Base case: 0 coins needed for amount 0
-        
-        // For each amount from 1 to target amount
-        for (int i = 1; i <= amount; i++) {
-            // Try each coin denomination
+        Arrays.fill(dp, amount + 1);
+        dp[0] = 0; // Base case: 0 coins to make amount 0
+
+        for (int a = 1; a <= amount; a++) {
             for (int coin : coins) {
-                if (coin <= i) {
-                    dp[i] = Math.min(dp[i], dp[i - coin] + 1);
+                if (coin <= a) {
+                    // Try using this coin: cost is 1 + best way to make (a - coin)
+                    dp[a] = Math.min(dp[a], dp[a - coin] + 1);
                 }
             }
         }
-        
+        // If still sentinel, amount is unreachable
         return dp[amount] > amount ? -1 : dp[amount];
     }
-    
+
     public static void main(String[] args) {
-        int[] coins1 = {1, 3, 4};
-        int amount1 = 6;
-        System.out.println("Minimum coins for " + amount1 + ": " + coinChange(coins1, amount1));
-        // Output: 2 (3 + 3)
-        
-        int[] coins2 = {2};
-        int amount2 = 3;
-        System.out.println("Minimum coins for " + amount2 + ": " + coinChange(coins2, amount2));
-        // Output: -1 (impossible)
+        CoinChange cc = new CoinChange();
+        System.out.println(cc.coinChange(new int[]{1, 5, 6, 9}, 11)); // 2 (5+6)
+        System.out.println(cc.coinChange(new int[]{2}, 3));            // -1
+        System.out.println(cc.coinChange(new int[]{1, 2, 5}, 11));    // 3 (5+5+1)
     }
 }
-

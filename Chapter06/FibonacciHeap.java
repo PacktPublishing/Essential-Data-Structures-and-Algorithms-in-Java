@@ -1,16 +1,16 @@
 import java.util.*;
 
 // -------------------------------------------------------
-// 1. Node definition
+// 1. Node Definition
 // -------------------------------------------------------
 class FibNode {
-    int key;       // value of the node
-    int degree;    // number of children
-    boolean mark;  // true if node has lost a child
+    int key;       // Value of the node
+    int degree;    // Number of structural children
+    boolean mark;  // True if node has lost a child since becoming a child of its current parent
     FibNode parent;
-    FibNode child; // one of the children (circular doubly-linked list)
-    FibNode left;  // left sibling
-    FibNode right; // right sibling
+    FibNode child; // One entry point to its circular doubly-linked child list
+    FibNode left;  // Self-referential loop pointers for circular list optimization
+    FibNode right;
 
     FibNode(int key) {
         this.key = key;
@@ -18,6 +18,8 @@ class FibNode {
         this.mark = false;
         this.parent = null;
         this.child = null;
+        // Initialize left and right pointing to self.
+        // This makes single node circular lists valid from creation.
         this.left = this;
         this.right = this;
     }
@@ -27,11 +29,11 @@ class FibNode {
 // 2. Fibonacci Heap
 // -------------------------------------------------------
 class FibonacciHeap {
-    // Made public so main method can access heap.n safely
-    public int n = 0; // number of nodes
-    private FibNode min = null; // pointer to minimum node
-
-    // ---------- basic list operations ----------
+    public int n = 0; // Total count of nodes in the entire heap
+    private FibNode min = null; // Single entry point pointer to the minimum node
+    
+    // Time Complexity: O(1) Worst-Case
+    // Deque splice technique allows instant list joining without shifting
     private void addToRootList(FibNode node) {
         if (min == null) {
             min = node;
@@ -48,34 +50,42 @@ class FibonacciHeap {
         }
     }
 
+    // Time Complexity: O(1) Worst-Case
     private void removeFromRootList(FibNode node) {
-        if (node == node.right) { // only node left
+        if (node == node.right) {
             min = null;
         } else {
             node.left.right = node.right;
             node.right.left = node.left;
             if (min == node) {
-                min = node.right;
+                min = node.right; // Safe fallback pointer before consolidation
             }
         }
     }
-
-    // ---------- public operations ----------
+    
+    // Time Complexity: O(1) Amortized / O(1) Worst-Case
+    // Lazy Insertion strategy. Does not maintain tree order on insert.
     public void insert(int key) {
         FibNode node = new FibNode(key);
         addToRootList(node);
         n++;
     }
 
+    // Time Complexity: O(1) Amortized / O(1) Worst-Case
     public int findMin() {
         return min != null ? min.key : Integer.MAX_VALUE;
     }
 
+    // Time Complexity: O(log n) Amortized / O(n) Worst-Case
+    // Re-linking nodes dynamically within a loop can cause infinite loops 
+    // if references change. Collecting items beforehand into an 
+    // intermediate list avoids this.
     public int extractMin() {
         if (min == null) return Integer.MAX_VALUE;
         FibNode z = min;
 
-        /* Add children safely by saving references before pointer modification */
+        // We isolate child references into a collection so pointer mutations 
+        // in addToRootList() do not corrupt the traversal loop.
         if (z.child != null) {
             FibNode firstChild = z.child;
             FibNode x = firstChild;
@@ -91,17 +101,17 @@ class FibonacciHeap {
             }
         }
 
-        /* remove z from root list */
         removeFromRootList(z);
         n--;
 
-        /* consolidate trees */
+        // Consolidate trees
         if (min != null) {
-            /* Use upper bound for Golden Ratio base (approx 1.44 * log2(n)) */
+            // Golden Ratio base upper-bound safely calculates max possible tree height.
+            // Using n after decrement handles the edge case of draining the last element flawlessly.
             int maxDegree = (int) Math.floor(Math.log(n + 1) / Math.log(1.618)) + 2;
             FibNode[] A = new FibNode[maxDegree];
 
-            /* Collect roots safely before changing tree structures */
+            // Collect root pointers before linking modifies left/right references.
             List<FibNode> roots = new ArrayList<>();
             FibNode w = min;
             FibNode start = min;
@@ -110,14 +120,12 @@ class FibonacciHeap {
                 w = w.right;
             } while (w != start);
 
-            // Consolidate
+            // Pair up trees of equal degrees
             for (FibNode wNode : roots) {
                 FibNode x = wNode;
-                
                 if (x.parent != null) {
-                    continue;
+                    continue; 
                 }
-                
                 int d = x.degree;
                 while (A[d] != null) {
                     FibNode y = A[d];
@@ -126,14 +134,16 @@ class FibonacciHeap {
                         x = y;
                         y = tmp;
                     }
-                    link(y, x); // make y child of x
+                    link(y, x); // y becomes child of x
                     A[d] = null;
                     d++;
                 }
                 A[d] = x;
             }
 
-            /* recompute min */
+            // Rebuild Root List Cleanly
+            // Completely isolating and reconstructing 
+            // pointers prevents tree fragmentation.
             min = null;
             for (FibNode a : A) {
                 if (a != null) {
@@ -156,31 +166,35 @@ class FibonacciHeap {
         return z.key;
     }
 
+    // Time Complexity: O(1) Amortized / O(log n) Worst-Case
     public void decreaseKey(FibNode x, int newKey) {
         if (x == null) return;
         if (newKey > x.key) throw new IllegalArgumentException("new key is larger");
         x.key = newKey;
         FibNode y = x.parent;
+        
+        // If heap property violated, cut child from parent
         if (y != null && x.key < y.key) {
             cut(x, y);
-            cascadingCut(y);
+            cascadingCut(y); // Recursively check if structural balance is broken
         }
         if (x.key < min.key) min = x;
     }
 
+    // Time Complexity: O(log n) Amortized / O(n) Worst-Case
     public void delete(FibNode x) {
         if (x == null) return;
-        decreaseKey(x, Integer.MIN_VALUE);
-        extractMin();
+        decreaseKey(x, Integer.MIN_VALUE); // Force to root position
+        extractMin();                      // Expel element
     }
 
-    // ---------- helper functions ----------
+    // ---------- Helper Functions ----------
+    
+    // Time Complexity: O(1) Worst-Case
     private void link(FibNode y, FibNode x) {
-        // remove y from root list
         y.left.right = y.right;
         y.right.left = y.left;
-        
-        // make y child of x
+
         y.parent = x;
         if (x.child == null) {
             x.child = y;
@@ -193,11 +207,11 @@ class FibonacciHeap {
             x.child.right = y;
         }
         x.degree++;
-        y.mark = false;
+        y.mark = false; // Reset mark state when establishing a new parent
     }
 
+    // Time Complexity: O(1) Worst-Case
     private void cut(FibNode x, FibNode y) {
-        /* remove x from child list of y */
         if (x.right == x) {
             y.child = null;
         } else {
@@ -206,12 +220,14 @@ class FibonacciHeap {
             if (y.child == x) y.child = x.right;
         }
         y.degree--;
-        /* add x to root list */
         addToRootList(x);
         x.parent = null;
         x.mark = false;
     }
 
+    // Time Complexity: O(1) Amortized / O(log n) Worst-Case
+    // Cascading Cuts maintain structural density bounds, keeping 
+    // tree roots flat.
     private void cascadingCut(FibNode y) {
         FibNode z = y.parent;
         if (z != null) {
@@ -224,7 +240,11 @@ class FibonacciHeap {
         }
     }
 
-    // ---------- Searches entire heap ----------
+    
+    // Time Complexity: O(n) Worst-Case
+    // Brute-Force fallback lookup helper.
+    // NOTE: Fibonacci Heaps do not natively support O(1) or O(log n) non-min lookups. 
+    // Production tracking depends on maintaining an external HashMap mapping keys to FibNodes.
     public FibNode findNode(int key) {
         if (min == null) return null;
         FibNode cur = min;
@@ -258,37 +278,33 @@ class FibonacciHeap {
         return null;
     }
 
-    // -------------------------------------------------
-    // 3. Demo
-    // -------------------------------------------------
     public static void main(String[] args) {
-        FibonacciHeap heap = new FibonacciHeap();
-        System.out.println("=== Fibonacci Heap Demo ===");
-
-        int[] values = { 10, 3, 7, 21, 5, 1, 12 };
-        System.out.println("Insert values: " + Arrays.toString(values));
-        for (int v : values) heap.insert(v);
-        System.out.println("Current min: " + heap.findMin());
-
-        FibNode node21 = heap.findNode(21);
-        System.out.println("\nDecrease key of 21 to 2");
-        heap.decreaseKey(node21, 2);
-        System.out.println("New min: " + heap.findMin());
-
-        System.out.println("\nExtracting all elements:");
-        while (heap.n > 0) {
-            int minVal = heap.extractMin();
-            System.out.print(minVal + " ");
-        }
-
-        System.out.println("\n\nTesting repeated operations:");
-        FibonacciHeap testHeap = new FibonacciHeap();
-        for (int i = 0; i < 15; i++) {
-            testHeap.insert(i);
-        }
-        while(testHeap.n > 0){
-            System.out.print(testHeap.extractMin() + " ");
-        }
+     
+        FibonacciHeap heap = new FibonacciHeap(); 
+        System.out.println("=== Fibonacci Heap Demo ==="); 
+        int[] values = { 10, 3, 7, 21, 5, 1, 12 }; 
+        System.out.println("Insert values: " + Arrays.toString(values)); 
+        for (int v : values) 
+            heap.insert(v); 
+        System.out.println("Current min: " + heap.findMin()); 
+        FibNode node21 = heap.findNode(21); 
+        System.out.println("\nDecrease key of 21 to 2"); 
+        heap.decreaseKey(node21, 2); 
+        System.out.println("New min: " + heap.findMin()); 
+        System.out.println("\nExtracting all elements:"); 
+        while (heap.n > 0) { 
+            int minVal = heap.extractMin(); 
+            System.out.print(minVal + " "); 
+        } 
+        System.out.println("\n\nTesting repeated operations:"); 
+        FibonacciHeap testHeap = new FibonacciHeap(); 
+        for (int i = 0; i < 15; i++) { 
+            testHeap.insert(i); 
+        } 
+        while(testHeap.n > 0) { 
+            System.out.print(testHeap.extractMin() + " "); 
+        } 
         System.out.println("\nTest completed successfully!");
     }
 }
+

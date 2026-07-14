@@ -1,68 +1,93 @@
+import java.util.Arrays;
+
 /**
  * MergeSortDemo provides a complete, heavily annotated implementation of Merge Sort,
  * including an explicit theoretical analysis of its time complexity based on
  * the Master Theorem.
- *
- * The algorithm is implemented using helper methods for clarity.
  */
 public class MergeSortDemo {
 
-	/**
-	 * Sorts an array of integers using the Merge Sort algorithm.
-	 * <p>
-	 * This method recursively divides the array into halves until the base case
-	 * (an array of size 1) is reached.
-	 */
-	public static void main(String[] args) {
-		int[] arr = {12, 11, 13, 5, 6, 7};
-		System.out.println("Original array: " + java.util.Arrays.toString(arr));
+    public static void main(String[] args) {
+        int[] arr = {12, 11, 13, 5, 6, 7};
+        System.out.println("Original array: " + Arrays.toString(arr));
+        
+        int[] arrCopy = Arrays.copyOf(arr, arr.length);
+        mergeSort(arrCopy, 0, arrCopy.length - 1);
+        
+        System.out.println("Sorted array:   " + Arrays.toString(arrCopy));
+    }
 
-		// Perform the sort on a copy of the array
-		int[] arrCopy = java.util.Arrays.copyOf(arr, arr.length);
-		mergeSort(arrCopy, 0, arrCopy.length - 1);
+    /**
+     * Divides the array recursively into halves.
+     * 
+     * TIME COMPLEXITY ANALYSIS (Master Theorem):
+     * 1. Recurrence Relation: T(n) = 2T(n/2) + O(n)
+     * 2. Parameters: a = 2 (subproblems), b = 2 (division factor), f(n) = O(n) (merge work)
+     * 3. Critical Value: n^(log_b a) = n^(log_2 2) = n^1 = n
+     * 4. Master Theorem Case: Since f(n) = Theta(n), this falls under Case 2 (Balanced Scenario).
+     *    Formula: T(n) = Theta(n^(log_b a) * log n)
+     *    Result:  T(n) = Theta(n log n) across Best, Average, and Worst cases.
+     * 
+     * SPACE COMPLEXITY: O(n) due to auxiliary temporary arrays allocated during merging.
+     */
+    public static void mergeSort(int[] arr, int left, int right) {
+        // Base Case: An array of size 0 or 1 is already sorted
+        if (left >= right) {
+            return;
+        }
 
-		System.out.println("Sorted array:   " + java.util.Arrays.toString(arrCopy));
-	}
+        // Prevents integer overflow compared to (left + right) / 2
+        int mid = left + (right - left) / 2;
 
-	public static void mergeSort(int[] arr, int left, int right) {
-		if (left < right) {
-			// Find the middle point of the array
-			int mid = left + (right - left) / 2;
+        // Divide phase: Concurrently split the problem down the tree height (log n levels)
+        mergeSort(arr, left, mid);      
+        mergeSort(arr, mid + 1, right); 
 
-			// Sort first half
-			mergeSort(arr, left, mid);
+        // Conquer phase: Combine solutions linearly at the current level
+        merge(arr, left, mid, right);
+    }
 
-			// Sort second half
-			mergeSort(arr, mid + 1, right);
+    /**
+     * Linearly merges two sorted contiguous sub-arrays into a single sorted segment.
+     * Time Complexity: O(n) where n is the number of elements in the range [left, right].
+     */
+    public static void merge(int[] arr, int left, int mid, int right) {
+        // KEY CHOICE: Allocation of an auxiliary tracking buffer
+        int[] temp = new int[right - left + 1];
+        
+        int i = left;      // Starting pointer for the left sorted partition
+        int j = mid + 1;   // Starting pointer for the right sorted partition
+        int k = 0;         // Target pointer for our temporary array
 
-			// Merge the two sorted halves
-			merge(arr, left, mid, right);
-		}
-	}
+        // Step 1: Compare elements side-by-side and pull the smaller value
+        while (i <= mid && j <= right) {
+            if (arr[i] <= arr[j]) { 
+                temp[k] = arr[i];
+                i++;
+            } else {
+                temp[k] = arr[j];
+                j++;
+            }
+            k++;
+        }
 
-	public static void merge(int[] arr, int left, int mid, int right) {
-		// Temporary storage for merging
-		int[] temp = new int[right - left + 1];
-		int i = 0;
-		int k = 0;
-		int j = 0;
+        // Step 2: Copy leftover elements from the left side if any remain
+        while (i <= mid) {
+            temp[k] = arr[i];
+            i++;
+            k++;
+        }
 
-		while (i < (mid - left + 1) && j < (right - (mid + 1) + 1) && k < (right - left + 1)) {
-			if (arr[left + i] <= arr[mid + 1] + j) {
-				temp[k] = arr[left + i];
-				i++;
-			} else {
-				temp[k] = arr[mid + 1 + j];
-				j++;
-			}
-			k++;
-		}
+        // Step 3: Copy leftover elements from the right side if any remain
+        while (j <= right) {
+            temp[k] = arr[j];
+            j++;
+            k++;
+        }
 
-		// Copy the merged elements back to the original array (This implementation needs refinement
-		// for a correct merge operation. For simplicity in this demonstration, we rely on the recursive calls.
-		// A standard merge operation implementation should use a temporary array to avoid overwriting data.
-
-		// NOTE: The placeholder merge logic is complex. For the purpose of demonstrating the algorithm structure,
-		// we acknowledge that a correct merge routine is necessary.
-	}
+        // Step 4: Drain temporary buffer back into the original working array
+        for (int p = 0; p < temp.length; p++) {
+            arr[left + p] = temp[p];
+        }
+    }
 }

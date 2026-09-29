@@ -63,4 +63,22 @@ public class FibonacciDemo {
         }
         return b;
     }
+    
+    public static void main(String[] args) {
+        int n = 40;
+
+        long start = System.nanoTime();
+        long naiveResult = FibonacciDemo.fibNaive(n);
+        long naiveTime = System.nanoTime() - start;
+
+        start = System.nanoTime();
+        long iterativeResult = FibonacciDemo.fibTailRecursive(n);
+        long iterativeTime = System.nanoTime() - start;
+
+        System.out.println("Fibonacci index: " + n);
+        System.out.printf("Naive recursion: %d (%.3f ms)%n",
+                naiveResult, naiveTime / 1_000_000.0);
+        System.out.printf("Iterative:       %d (%.3f ms)%n",
+                iterativeResult, iterativeTime / 1_000_000.0);
+    }
 }
